@@ -63,13 +63,16 @@ def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-3):
         for state in range(nS):
             action = policy[state] #map state to action by policy
             sum = 0
+            reward_f = 0
             for nextstates in range(len(P[state][action])):
                 (probability, nextstate, reward, _) = P[state][action][nextstates]
                 sum += probability*value_function[nextstate]
-            value_function[state] = reward + gamma*sum
+                reward_f += probability*reward
+            value_function[state] = reward_f + gamma*sum
+        #print(value_function)
         if max(abs(value_function - prev_value_function)) < tol:
             break
-
+    #print("\n\n\n")
 
     ############################
     return value_function
@@ -106,11 +109,13 @@ def policy_improvement(P, nS, nA, value_from_policy, policy, gamma=0.9):
         
         for action in range(nA):
             sum = 0
+            reward_f = 0
             for nextstates in range(len(P[state][action])):
                 (probability, nextstate, reward, _) = P[state][action][nextstates]
                 sum += probability*value_from_policy[nextstate]
+                reward_f += probability*reward
             
-            s_a_new = reward + gamma*sum
+            s_a_new = reward_f + gamma*sum
 
             if s_a_new >= s_a:
                 s_a = s_a_new
@@ -178,7 +183,27 @@ def value_iteration(P, nS, nA, gamma=0.9, tol=1e-3):
     policy = np.zeros(nS, dtype=int)
     ############################
     # YOUR IMPLEMENTATION HERE #
-
+    while(True):
+        prev_value_function = value_function.copy()
+        for state in range(nS):
+            argmax_action = -1
+            maxval = 0
+            for action in range(nA):
+                sum = 0
+                reward_f = 0
+                for nextstates in range(len(P[state][action])):
+                    (probability, nextstate, reward, _) = P[state][action][nextstates]
+                    sum += probability*value_function[nextstate]
+                    reward_f += probability*reward
+                val = reward_f + gamma* sum
+                if val > maxval:
+                    maxval = val
+                    argmax_action = action
+            value_function[state] = maxval
+        policy = policy_improvement(P, nS, nA, value_function, policy)
+        if max(abs(value_function - prev_value_function)) < tol:
+            break
+        
     ############################
     return value_function, policy
 
@@ -225,12 +250,13 @@ if __name__ == "__main__":
     env = gym.make("Stochastic-4x4-FrozenLake-v0")
 
     print("\n" + "-" * 25 + "\nBeginning Policy Iteration\n" + "-" * 25)
-
+    
     V_pi, p_pi = policy_iteration(env.P, env.nS, env.nA, gamma=0.9, tol=1e-3)
     render_single(env, p_pi, 100)
     print(V_pi, p_pi)
 
-    # print("\n" + "-" * 25 + "\nBeginning Value Iteration\n" + "-" * 25)
+    print("\n" + "-" * 25 + "\nBeginning Value Iteration\n" + "-" * 25)
 
-    # V_vi, p_vi = value_iteration(env.P, env.nS, env.nA, gamma=0.9, tol=1e-3)
-    # render_single(env, p_vi, 100)
+    V_vi, p_vi = value_iteration(env.P, env.nS, env.nA, gamma=0.9, tol=1e-3)
+    render_single(env, p_vi, 100)
+    print(V_vi, p_vi)
