@@ -1,6 +1,7 @@
 import tensorflow as tf
-import tensorflow.contrib.layers as layers
-
+#import tensorflow.contrib.layers as layers
+#import tensorflow.keras.layers as layers
+import tensorflow.compat.v1.layers as layers
 from utils.general import get_logger
 from utils.test_env import EnvTest
 from core.deep_q_learning import DQN
@@ -8,6 +9,7 @@ from q1_schedule import LinearExploration, LinearSchedule
 
 from configs.q2_linear import config
 
+import numpy as np 
 
 class Linear(DQN):
     """
@@ -23,7 +25,7 @@ class Linear(DQN):
         """
         # this information might be useful
         state_shape = list(self.env.observation_space.shape)
-
+        
         ##############################################################
         """
         TODO:
@@ -50,8 +52,13 @@ class Linear(DQN):
         """
         ##############################################################
         ################YOUR CODE HERE (6-15 lines) ##################
-
-        pass
+        img_height, img_width, nchannels = state_shape[0], state_shape[1], state_shape[2]
+        self.s = tf.compat.v1.placeholder(type = tf.uint8, shape = (None, img_height, img_width, nchannels * self.config.state_history), name = "states")
+        self.a = tf.compat.v1.placeholder(type = tf.int32, shape = (None), name = "actions")
+        self.r = tf.compat.v1.placeholder(type = tf.float32, shape = (None), name = "rewards")
+        self.sp = tf.compat.v1.placeholder(type = tf.uint8, shape = (None, img_height, img_width, nchannels * self.config.state_history), name = "nextstates")
+        self.done_mask = tf.compat.v1.placeholder(type = bool, shape = (None), name = "done_mask")
+        self.lr = tf.compat.v1.placeholder(type=tf.float32, name = "learning_rate")
 
         ##############################################################
         ######################## END YOUR CODE #######################
@@ -88,8 +95,8 @@ class Linear(DQN):
         ##############################################################
         ################ YOUR CODE HERE - 2-3 lines ##################
 
-        pass
-
+        out = layers.flatten(state)
+        out = layers.dense(state,units = num_actions, name = scope, reuse = reuse)
         ##############################################################
         ######################## END YOUR CODE #######################
 
@@ -225,3 +232,5 @@ if __name__ == '__main__':
     # train model
     model = Linear(env, config)
     model.run(exp_schedule, lr_schedule)
+    
+    

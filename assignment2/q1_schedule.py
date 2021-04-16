@@ -32,9 +32,10 @@ class LinearSchedule(object):
         """
         ##############################################################
         ################ YOUR CODE HERE - 3-4 lines ##################
-
-        pass
-
+        if t <= self.nsteps:
+            self.epsilon = (self.epsilon - (self.eps_begin - self.eps_end)/self.nsteps * (self.nsteps - t))
+        else: #if t is larger than nsteps, it means epsilon has gone to end.
+            self.epsilon = self.eps_end
         ##############################################################
         ######################## END YOUR CODE ############## ########
 
@@ -77,7 +78,10 @@ class LinearExploration(LinearSchedule):
         ##############################################################
         ################ YOUR CODE HERE - 4-5 lines ##################
 
-        pass
+        if np.random.rand() < self.epsilon:
+            return self.env.action_space.sample()
+        else:
+            return best_action
 
         ##############################################################
         ######################## END YOUR CODE #######################
@@ -114,10 +118,10 @@ def test3():
 
 
 def your_test():
-    """
-    Use this to implement your own tests if you'd like (not required)
-    """
-    pass
+    env = EnvTest((5, 5, 1))
+    exp_strat = LinearExploration(env, 1, 0, 10)
+    exp_strat.update(9)
+    print(exp_strat.epsilon)
 
 
 if __name__ == "__main__":
